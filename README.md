@@ -1,98 +1,142 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# InterviewPrep AI — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> NestJS REST API powering the Interview Prep AI platform. Handles authentication, session management, and Claude AI integration for question generation and answer evaluation.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+[Frontend repo](https://github.com/koatth60/interview-prep-ai-front)
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Project setup
+- **JWT authentication** — Register/login with bcrypt password hashing and signed JWTs
+- **AI question generation** — Calls Anthropic Claude with the job description, returns 5 tailored questions
+- **AI answer evaluation** — Submits candidate answers to Claude, returns structured feedback and score
+- **PostgreSQL persistence** — TypeORM entities with automatic schema sync in development
+- **Role-ready architecture** — Auth guard applied globally per route, easy to extend
 
-```bash
-$ npm install
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | NestJS |
+| Language | TypeScript |
+| Database | PostgreSQL |
+| ORM | TypeORM |
+| Auth | JWT (passport-jwt) + bcryptjs |
+| AI | Anthropic Claude (`claude-sonnet-4-6`) |
+| Config | @nestjs/config (.env) |
+
+## API Endpoints
+
+### Auth
+
+```
+POST /auth/register    { name, email, password }  → { access_token, user }
+POST /auth/login       { email, password }         → { access_token, user }
 ```
 
-## Compile and run the project
+### Interview (requires Bearer token)
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+POST /interview/sessions              { jobTitle, jobDescription }  → session + questions
+GET  /interview/sessions                                            → user's session history
+POST /interview/questions/:id/answer  { answer }                   → question with feedback + score
 ```
 
-## Run tests
+## Project Structure
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```
+src/
+├── auth/
+│   ├── auth.controller.ts      # /auth/register and /auth/login
+│   ├── auth.service.ts         # bcrypt hashing, JWT signing
+│   ├── auth.module.ts
+│   ├── jwt.strategy.ts         # validates Bearer token, injects req.user
+│   └── jwt-auth.guard.ts       # @UseGuards decorator
+├── interview/
+│   ├── interview.controller.ts # session and answer endpoints
+│   ├── interview.service.ts    # Claude API calls + DB writes
+│   ├── interview.module.ts
+│   ├── interview-session.entity.ts
+│   └── question.entity.ts
+├── users/
+│   └── user.entity.ts
+└── app.module.ts               # TypeORM config, global modules
 ```
 
-## Deployment
+## Getting Started
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Prerequisites
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Node.js 18+
+- PostgreSQL running locally or on a cloud provider
+
+### Installation
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+git clone https://github.com/koatth60/interview-prep-ai-back.git
+cd interview-prep-ai-back
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Environment variables
 
-## Resources
+Create `.env` at the project root:
 
-Check out a few resources that may come in handy when working with NestJS:
+```env
+# PostgreSQL
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=interview_prep
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# JWT
+JWT_SECRET=your-super-secret-key-change-this
 
-## Support
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# App
+PORT=4000
+```
 
-## Stay in touch
+### Run in development
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm run start:dev
+```
 
-## License
+TypeORM `synchronize: true` will auto-create all tables on first run.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Run in production
+
+```bash
+npm run build
+npm run start:prod
+```
+
+> Set `synchronize: false` in `app.module.ts` and use migrations for production.
+
+---
+
+## Architecture Notes
+
+**Claude integration** lives entirely in `interview.service.ts`. Two prompts:
+
+1. `createSession` — sends job title + description, receives a JSON array of 5 questions
+2. `submitAnswer` — sends question + user answer, receives `{ feedback, score }` JSON
+
+**Auth flow:**
+1. Client POSTs credentials to `/auth/login`
+2. Server validates, returns a signed JWT
+3. Client includes `Authorization: Bearer <token>` on all protected requests
+4. `JwtStrategy` decodes and attaches `{ id, email }` to `req.user`
+
+---
+
+## Author
+
+**Carlos Mendoza** — Full-stack developer specialising in React, Next.js, NestJS and PostgreSQL.
+
+[GitHub](https://github.com/koatth60) · [Portfolio](https://koatth60.github.io)
