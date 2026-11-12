@@ -1,8 +1,8 @@
-# InterviewPrep AI — Backend
+# Grillr — Backend API
 
-> NestJS REST API powering the Interview Prep AI platform. Handles authentication, session management, and Claude AI integration for question generation and answer evaluation.
+> NestJS REST API powering Grillr, an AI mock-interview platform. Handles authentication, session management, and Claude AI integration for question generation and answer evaluation.
 
-[Frontend repo](https://github.com/koatth60/interview-prep-ai-front)
+**Live demo:** [grillr-seven.vercel.app](https://grillr-seven.vercel.app) · [Frontend repo](https://github.com/koatth60/grillr) · [Portfolio](https://koatth60.github.io)
 
 ---
 
@@ -74,8 +74,8 @@ src/
 ### Installation
 
 ```bash
-git clone https://github.com/koatth60/interview-prep-ai-back.git
-cd interview-prep-ai-back
+git clone https://github.com/koatth60/grillr-back.git
+cd grillr-back
 npm install
 ```
 
